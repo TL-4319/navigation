@@ -222,7 +222,7 @@ class Ekf15State {
     /* Position update */
     ins_lla_rad_m_ +=
       (dt_s * llarate(ins_ned_vel_mps_.cast<double>(),
-      ins_lla_rad_m_. AngPosUnit::RAD)).cast<double>();
+      ins_lla_rad_m_, AngPosUnit::RAD)).cast<double>();
     /* Jacobian */
     fs_.block(0, 3, 3, 3) = Eigen::Matrix<float, 3, 3>::Identity();
     fs_(5, 2) = -2.0f * G_MPS2<float> / SEMI_MAJOR_AXIS_LENGTH_M;
