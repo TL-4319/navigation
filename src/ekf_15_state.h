@@ -193,6 +193,7 @@ class Ekf15State {
     ins_gyro_radps_ = gyro - gyro_bias_radps_;
     /* Initialize pitch, roll, and heading */
     ins_ypr_rad_ = TiltCompass(accel, mag);
+    ins_ypr_rad_[0] = -1.5708f;
     /* Euler to quaternion */
     quat_ = eul2quat(ins_ypr_rad_);
   }
