@@ -32,5 +32,6 @@
 #include "earth_model.h"  // NOLINT
 #include "transforms.h"  // NOLINT
 #include "utils.h"  // NOLINT
+#include "gnss_compass.h" //NOLINT
 
 #endif  // NAVIGATION_SRC_NAVIGATION_H_ NOLINT
