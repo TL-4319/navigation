@@ -146,7 +146,7 @@ class Ekf15State {
   void Initialize(const Eigen::Vector3f &accel, const Eigen::Vector3f &gyro,
                   const Eigen::Vector3f &mag, const Eigen::Vector3f &ned_vel,
                   const Eigen::Vector3d &lla, const Eigen::Vector3f &rel_pos = Eigen::Vector3f::Zero(), 
-                  const bool hard_code_heading = false, const float heading = 0.0f) {
+                  const float overwrite_heading = -1.0f) {
     /* Observation matrix */
     h_.block(0, 0, 6, 6) = Eigen::Matrix<float, 6, 6>::Identity();
     /* Process noise covariance */
@@ -196,7 +196,7 @@ class Ekf15State {
     ins_gyro_radps_ = gyro - gyro_bias_radps_;
     /* Initialize pitch, roll, and heading */
     ins_ypr_rad_ = TiltCompass(accel, mag);
-    if (hard_code_heading){
+    if (overwrite_heading >= 0){
       ins_ypr_rad[0] = heading; 
     }
     /* Euler to quaternion */
@@ -562,7 +562,7 @@ class Ekf15StateGPSheading {
   void Initialize(const Eigen::Vector3f &accel, const Eigen::Vector3f &gyro,
                   const Eigen::Vector3f &mag, const Eigen::Vector3f &ned_vel,
                   const Eigen::Vector3d &lla, const Eigen::Vector3f &rel_pos = Eigen::Vector3f::Zero(), 
-                  const bool hard_code_heading = false, const float heading = 0.0f) {
+                  const float overwrite_heading = -1.0f) {
     /* Observation matrix */
     h_gnss_.block(0, 0, 6, 6) = Eigen::Matrix<float, 6, 6>::Identity();
     /* Process noise covariance */
