@@ -197,7 +197,7 @@ class Ekf15State {
     /* Initialize pitch, roll, and heading */
     ins_ypr_rad_ = TiltCompass(accel, mag);
     if (overwrite_heading >= 0){
-      ins_ypr_rad[0] = heading; 
+      ins_ypr_rad_(0) = overwrite_heading; 
     }
     /* Euler to quaternion */
     quat_ = eul2quat(ins_ypr_rad_);
