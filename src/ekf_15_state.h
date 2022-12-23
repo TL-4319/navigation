@@ -72,6 +72,12 @@ class Ekf15State {
   inline void gnss_vel_d_std_mps(const float val) {
     gnss_vel_d_std_mps_ = val;
   }
+  inline void gnss_rel_pos_ne_std_m(const float val) {
+    gnss_rel_pos_ne_std_m_ = val;
+  }
+  inline void gnss_rel_pos_d_std_m(const float val) {
+    gnss_rel_pos_d_std_m_ = val;
+  }
   inline void antenna_baseline_m (const Eigen::Vector3f val){
     BASELINE_BODY_VEC_M_ = val;
     BASELINE_BODY_REV_M_ = -1.0f * BASELINE_BODY_VEC_M_;
@@ -106,6 +112,12 @@ class Ekf15State {
   }
   inline float gnss_vel_d_std_mps() const {
     return gnss_vel_d_std_mps_;
+  }
+  inline float gnss_rel_pos_ne_std_m() const {
+    return gnss_rel_pos_ne_std_m_;
+  }
+  inline float gnss_rel_pos_d_std_m() const {
+    return gnss_rel_pos_d_std_m_;
   }
   /* Initial covariance setters */
   inline void init_pos_err_std_m(const float val) {
@@ -272,9 +284,9 @@ class Ekf15State {
     s_gnss_ = h_gnss_ * p_ * h_gnss_.transpose() + r_gnss_;
     /* Kalman gain */
     k_gnss_ = p_ * h_gnss_.transpose() * s_gnss_.inverse();
-    /* Covariance update, P = (I + K * H) * P * (I + K * H)' + K * R * K' */
-    p_ = (Eigen::Matrix<float, 15, 15>::Identity() - k_gnss_ * h_gnss_) * p_ *
-        (Eigen::Matrix<float, 15, 15>::Identity() - k_gnss_ * h_gnss_).transpose()
+    /* Covariance update, P = (I - K * H) * P * (I - K * H)' + K * R * K' */
+    p_ = (I_ - k_gnss_ * h_gnss_) * p_ *
+        (I_ - k_gnss_ * h_gnss_).transpose()
          + k_gnss_ * r_gnss_ * k_gnss_.transpose();
     /* State update, x = K * y */
     x_ = k_gnss_ * y_gnss_;
@@ -317,10 +329,10 @@ class Ekf15State {
     s_moving_base_ = h_moving_base_ * p_ * h_moving_base_.transpose() + r_moving_base_;
     /* Kalman gain */
     k_moving_base_ = p_ * h_moving_base_.transpose() * s_moving_base_.inverse();
-    /* Covariance update, P = (I + K * H) * P * (I + K * H)' + K * R * K' */
-    p_ = (Eigen::Matrix<float, 15, 15>::Identity() - k_moving_base_ * h_moving_base_) * p_ *
-        (Eigen::Matrix<float, 15, 15>::Identity() - k_moving_base_ * h_moving_base_).transpose()
-         + k_moving_base_ * r_moving_base_ * k_moving_base_.transpose();
+    /* Covariance update, P = (I - K * H) * P * (I - K * H)' + K * R * K' */
+    //p_ = (I_ - k_moving_base_ * h_moving_base_) * p_ *
+    //    (I_ - k_moving_base_ * h_moving_base_).transpose()
+    //     + k_moving_base_ * r_moving_base_ * k_moving_base_.transpose();
     /* State update, x = K * y */
     x_ = k_moving_base_ * y_moving_base_;
     /* Position update */
@@ -332,7 +344,7 @@ class Ekf15State {
     double Rew = SEMI_MAJOR_AXIS_LENGTH_M / sqrt_denom;
     ins_lla_rad_m_(0) += x_(0) / (Rew + ins_lla_rad_m_(2));
     ins_lla_rad_m_(1) += x_(1) / (Rns + ins_lla_rad_m_(2)) /
-                         cos(ins_lla_rad_m_(0));
+                        cos(ins_lla_rad_m_(0));
     /* Velocity update */
     float temp = ins_ned_vel_mps_[2];
     ins_ned_vel_mps_ += x_.segment(3, 3);
@@ -469,6 +481,8 @@ class Ekf15State {
   Eigen::Matrix<float, 3, 1> y_moving_base_ = Eigen::Matrix<float, 3, 1>::Zero();
   /* State matrix */
   Eigen::Matrix<float, 15, 1> x_ = Eigen::Matrix<float, 15, 1>::Zero();
+  /* Identity matrix for debug */
+  Eigen::Matrix<float, 15, 15> I_ = Eigen::Matrix<float, 15, 15>::Identity();
   /*
   * Constants
   */
