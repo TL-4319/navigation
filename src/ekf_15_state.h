@@ -163,29 +163,29 @@ class Ekf15State {
                   const Eigen::Vector3d &lla, const Eigen::Vector3f &rel_pos = Eigen::Vector3f::Zero(), 
                   const float overwrite_heading = -1.0f) {
     /* Observation matrix */
-    h_gnss_.block(0, 0, 6, 6) = Eigen::Matrix<float, 6, 6>::Identity();
+    // h_gnss_.block(0, 0, 6, 6) = Eigen::Matrix<float, 6, 6>::Identity();
     /* Process noise covariance */
-    rw_.block(0, 0, 3, 3) = accel_std_mps2_ * accel_std_mps2_ *
-                            Eigen::Matrix<float, 3, 3>::Identity();
-    rw_.block(3, 3, 3, 3) = gyro_std_radps_ * gyro_std_radps_ *
-                            Eigen::Matrix<float, 3, 3>::Identity();
-    rw_.block(6, 6, 3, 3) = 2.0f * accel_markov_bias_std_mps2_ *
-                            accel_markov_bias_std_mps2_ / accel_tau_s_ *
-                            Eigen::Matrix<float, 3, 3>::Identity();
-    rw_.block(9, 9, 3, 3) = 2.0f * gyro_markov_bias_std_radps_ *
-                            gyro_markov_bias_std_radps_ / gyro_tau_s_ *
-                            Eigen::Matrix<float, 3, 3>::Identity();
+    // rw_.block(0, 0, 3, 3) = accel_std_mps2_ * accel_std_mps2_ *
+    //                         Eigen::Matrix<float, 3, 3>::Identity();
+    // rw_.block(3, 3, 3, 3) = gyro_std_radps_ * gyro_std_radps_ *
+    //                         Eigen::Matrix<float, 3, 3>::Identity();
+    // rw_.block(6, 6, 3, 3) = 2.0f * accel_markov_bias_std_mps2_ *
+    //                         accel_markov_bias_std_mps2_ / accel_tau_s_ *
+    //                         Eigen::Matrix<float, 3, 3>::Identity();
+    // rw_.block(9, 9, 3, 3) = 2.0f * gyro_markov_bias_std_radps_ *
+    //                         gyro_markov_bias_std_radps_ / gyro_tau_s_ *
+    //                         Eigen::Matrix<float, 3, 3>::Identity();
     /* GNSS fusion observation noise covariance */
-    r_gnss_.block(0, 0, 2, 2) = gnss_pos_ne_std_m_ * gnss_pos_ne_std_m_ *
-                          Eigen::Matrix<float, 2, 2>::Identity();
-    r_gnss_(2, 2) = gnss_pos_d_std_m_ * gnss_pos_d_std_m_;
-    r_gnss_.block(3, 3, 2, 2) = gnss_vel_ne_std_mps_ * gnss_vel_ne_std_mps_ *
-                          Eigen::Matrix<float, 2, 2>::Identity();
-    r_gnss_(5, 5) = gnss_vel_d_std_mps_ * gnss_vel_d_std_mps_;
+    // r_gnss_.block(0, 0, 2, 2) = gnss_pos_ne_std_m_ * gnss_pos_ne_std_m_ *
+    //                       Eigen::Matrix<float, 2, 2>::Identity();
+    // r_gnss_(2, 2) = gnss_pos_d_std_m_ * gnss_pos_d_std_m_;
+    // r_gnss_.block(3, 3, 2, 2) = gnss_vel_ne_std_mps_ * gnss_vel_ne_std_mps_ *
+    //                       Eigen::Matrix<float, 2, 2>::Identity();
+    // r_gnss_(5, 5) = gnss_vel_d_std_mps_ * gnss_vel_d_std_mps_;
     /* Relative position fusion observation noise covariance */
-    r_moving_base_.block(0, 0, 2, 2) = gnss_rel_pos_ne_std_m_ * gnss_rel_pos_ne_std_m_ *
-                          Eigen::Matrix<float, 2, 2>::Identity();
-    r_moving_base_(2, 2) = gnss_rel_pos_d_std_m_ * gnss_rel_pos_d_std_m_;
+    // r_moving_base_.block(0, 0, 2, 2) = gnss_rel_pos_ne_std_m_ * gnss_rel_pos_ne_std_m_ *
+    //                       Eigen::Matrix<float, 2, 2>::Identity();
+    // r_moving_base_(2, 2) = gnss_rel_pos_d_std_m_ * gnss_rel_pos_d_std_m_;
     /* Initial covariance estimate */
     p_.block(0, 0, 3, 3) = init_pos_err_std_m_ * init_pos_err_std_m_ *
                           Eigen::Matrix<float, 3, 3>::Identity();
@@ -227,6 +227,20 @@ class Ekf15State {
   /* Perform a time update */
   void TimeUpdate(const Eigen::Vector3f &accel, const Eigen::Vector3f &gyro,
                   const float dt_s) {
+    Eigen::Matrix<float, 12, 12> rw_ = Eigen::Matrix<float, 12, 12>::Zero();
+    rw_.block(0, 0, 3, 3) = accel_std_mps2_ * accel_std_mps2_ *
+                            Eigen::Matrix<float, 3, 3>::Identity();
+    rw_.block(3, 3, 3, 3) = gyro_std_radps_ * gyro_std_radps_ *
+                            Eigen::Matrix<float, 3, 3>::Identity();
+    rw_.block(6, 6, 3, 3) = 2.0f * accel_markov_bias_std_mps2_ *
+                            accel_markov_bias_std_mps2_ / accel_tau_s_ *
+                            Eigen::Matrix<float, 3, 3>::Identity();
+    rw_.block(9, 9, 3, 3) = 2.0f * gyro_markov_bias_std_radps_ *
+                            gyro_markov_bias_std_radps_ / gyro_tau_s_ *
+                            Eigen::Matrix<float, 3, 3>::Identity();
+
+    Eigen::Matrix<float, 15, 12> gs_ = Eigen::Matrix<float, 15, 12>::Zero();
+
     /* A-priori accel and rotation rate estimate */
     ins_accel_mps2_ = accel - accel_bias_mps2_;
     ins_gyro_radps_ = gyro - gyro_bias_radps_;
@@ -251,6 +265,7 @@ class Ekf15State {
       (dt_s * llarate(ins_ned_vel_mps_.cast<double>(),
       ins_lla_rad_m_, AngPosUnit::RAD)).cast<double>();
     /* Jacobian */
+    Eigen::Matrix<float, 15, 15> fs_ = Eigen::Matrix<float, 15, 15>::Zero();
     fs_.block(0, 3, 3, 3) = Eigen::Matrix<float, 3, 3>::Identity();
     fs_(5, 2) = -2.0f * G_MPS2<float> / SEMI_MAJOR_AXIS_LENGTH_M;
     fs_.block(3, 6, 3, 3) = -2.0f * t_b2ned * Skew(ins_accel_mps2_);
@@ -260,13 +275,14 @@ class Ekf15State {
     fs_.block(9, 9, 3, 3) = accel_markov_bias_;  // Accel Markov Bias
     fs_.block(12, 12, 3, 3) = gyro_markov_bias_;  // Rotation Rate Markov Bias
     /* State transition matrix */
-    phi_ = Eigen::Matrix<float, 15, 15>::Identity() + fs_ * dt_s;
+    Eigen::Matrix<float, 15, 15> phi_ = Eigen::Matrix<float, 15, 15>::Identity() + fs_ * dt_s;
     /* Process Noise Covariance (Discrete approximation) */
     gs_.block(3, 0, 3, 3) = -t_b2ned;
     gs_.block(6, 3, 3, 3) = -0.5f * Eigen::Matrix<float, 3, 3>::Identity();
     gs_.block(9, 6, 3, 3) = Eigen::Matrix<float, 3, 3>::Identity();
     gs_.block(12, 9, 3, 3) = Eigen::Matrix<float, 3, 3>::Identity();
     /* Discrete Process Noise */
+    Eigen::Matrix<float, 15, 15> q_ = Eigen::Matrix<float, 15, 15>::Zero();
     q_ = phi_ * dt_s * gs_ * rw_ * gs_.transpose();
     q_ = 0.5f * (q_ + q_.transpose().eval());
     /* Covariance Time Update */
@@ -277,17 +293,29 @@ class Ekf15State {
   /* Perform a measurement update */
   void MeasurementUpdate_gnss(const Eigen::Vector3f &ned_vel,
                          const Eigen::Vector3d &lla) {
+    Eigen::Matrix<float, 6, 15> h_gnss_ = Eigen::Matrix<float, 6, 15>::Zero();
+    h_gnss_.block(0, 0, 6, 6) = Eigen::Matrix<float, 6, 6>::Identity();
+
+    Eigen::Matrix<float, 6, 6> r_gnss_ = Eigen::Matrix<float, 6, 6>::Zero();
+    r_gnss_.block(0, 0, 2, 2) = gnss_pos_ne_std_m_ * gnss_pos_ne_std_m_ *
+                          Eigen::Matrix<float, 2, 2>::Identity();
+    r_gnss_(2, 2) = gnss_pos_d_std_m_ * gnss_pos_d_std_m_;
+    r_gnss_.block(3, 3, 2, 2) = gnss_vel_ne_std_mps_ * gnss_vel_ne_std_mps_ *
+                          Eigen::Matrix<float, 2, 2>::Identity();
+    r_gnss_(5, 5) = gnss_vel_d_std_mps_ * gnss_vel_d_std_mps_;
+
     /* Y, error between Measures and Outputs */
+    Eigen::Matrix<float, 6, 1> y_gnss_ = Eigen::Matrix<float, 6, 1>::Zero();
     y_gnss_.segment(0, 3) = lla2ned(lla, ins_lla_rad_m_, AngPosUnit::RAD).cast<float>();
     y_gnss_.segment(3, 3) = ned_vel - ins_ned_vel_mps_;
     /* Innovation covariance */
-    s_gnss_ = h_gnss_ * p_ * h_gnss_.transpose() + r_gnss_;
+    Eigen::Matrix<float, 6, 6> s_gnss_ = h_gnss_ * p_ * h_gnss_.transpose() + r_gnss_;
     /* Kalman gain */
-    k_gnss_ = p_ * h_gnss_.transpose() * s_gnss_.inverse();
+    Eigen::Matrix<float, 15, 6> k_gnss_ = p_ * h_gnss_.transpose() * s_gnss_.inverse();
     /* Covariance update, P = (I - K * H) * P * (I - K * H)' + K * R * K' */
-    p_ = (I_ - k_gnss_ * h_gnss_) * p_ *
-        (I_ - k_gnss_ * h_gnss_).transpose()
-         + k_gnss_ * r_gnss_ * k_gnss_.transpose();
+    {Eigen::Matrix<float, 15, 15> temp_matrix = Eigen::Matrix<float, 15, 15>::Identity() - k_gnss_ * h_gnss_;
+    p_ = temp_matrix * p_ * temp_matrix.transpose();}
+    p_ += k_gnss_ * r_gnss_ * k_gnss_.transpose();
     /* State update, x = K * y */
     x_ = k_gnss_ * y_gnss_;
     /* Position update */
@@ -318,21 +346,29 @@ class Ekf15State {
     ins_gyro_radps_ -= x_.segment(12, 3);
   }
   void MeasurementUpdate_moving_base(const Eigen::Vector3f &rel_pos) {
+    Eigen::Matrix<float, 3, 15> h_moving_base_ = Eigen::Matrix<float, 3, 15>::Zero(); // moving baseline measurement update observation matrix
+
+    Eigen::Matrix<float, 3, 3> r_moving_base_ = Eigen::Matrix<float, 3, 3>::Zero();
+    r_moving_base_.block(0, 0, 2, 2) = gnss_rel_pos_ne_std_m_ * gnss_rel_pos_ne_std_m_ *
+                          Eigen::Matrix<float, 2, 2>::Identity();
+    r_moving_base_(2, 2) = gnss_rel_pos_d_std_m_ * gnss_rel_pos_d_std_m_;
+
     /* Body to NED transformation from current attitude */
     t_b2ned = eul2dcm(ins_ypr_rad_).transpose();
     baseline_nav_vec_m_ = t_b2ned * BASELINE_BODY_VEC_M_;
     /* Y, error between Measures and Outputs */
+    Eigen::Matrix<float, 3, 1> y_moving_base_ = Eigen::Matrix<float, 3, 1>::Zero();
     y_moving_base_.segment(0, 3) = rel_pos - baseline_nav_vec_m_;
     /* Observation matrix */
     h_moving_base_.block(0,6,3,3) = t_b2ned * Skew(BASELINE_BODY_REV_M_);
     /* Innovation covariance */
-    s_moving_base_ = h_moving_base_ * p_ * h_moving_base_.transpose() + r_moving_base_;
+    Eigen::Matrix<float, 3, 3> s_moving_base_ = h_moving_base_ * p_ * h_moving_base_.transpose() + r_moving_base_;
     /* Kalman gain */
-    k_moving_base_ = p_ * h_moving_base_.transpose() * s_moving_base_.inverse();
+    Eigen::Matrix<float, 15, 3> k_moving_base_ = p_ * h_moving_base_.transpose() * s_moving_base_.inverse();
     /* Covariance update, P = (I - K * H) * P * (I - K * H)' + K * R * K' */
-    //p_ = (I_ - k_moving_base_ * h_moving_base_) * p_ *
-    //    (I_ - k_moving_base_ * h_moving_base_).transpose()
-    //     + k_moving_base_ * r_moving_base_ * k_moving_base_.transpose();
+    {Eigen::Matrix<float, 15, 15> temp_matrix = Eigen::Matrix<float, 15, 15>::Identity() - k_moving_base_ * h_moving_base_;
+    p_ = temp_matrix * p_ * temp_matrix.transpose();}
+    p_ += k_moving_base_ * r_moving_base_ * k_moving_base_.transpose();
     /* State update, x = K * y */
     x_ = k_moving_base_ * y_moving_base_;
     /* Position update */
@@ -453,41 +489,39 @@ class Ekf15State {
   * Kalman filter matrices
   */
   /* Observation matrix */
-  Eigen::Matrix<float, 6, 15> h_gnss_ = Eigen::Matrix<float, 6, 15>::Zero(); // GNSS measurement update observation matrix
-  Eigen::Matrix<float, 3, 15> h_moving_base_ = Eigen::Matrix<float, 3, 15>::Zero(); // moving baseline measurement update observation matrix
+  // Eigen::Matrix<float, 6, 15> h_gnss_ = Eigen::Matrix<float, 6, 15>::Zero(); // GNSS measurement update observation matrix
+  // Eigen::Matrix<float, 3, 15> h_moving_base_ = Eigen::Matrix<float, 3, 15>::Zero(); // moving baseline measurement update observation matrix
   /* Covariance of the observation noise */
-  Eigen::Matrix<float, 6, 6> r_gnss_ = Eigen::Matrix<float, 6, 6>::Zero();
-  Eigen::Matrix<float, 3, 3> r_moving_base_ = Eigen::Matrix<float, 3, 3>::Zero();
+  // Eigen::Matrix<float, 6, 6> r_gnss_ = Eigen::Matrix<float, 6, 6>::Zero();
+  // Eigen::Matrix<float, 3, 3> r_moving_base_ = Eigen::Matrix<float, 3, 3>::Zero();
   /* Covariance of the Sensor Noise */
-  Eigen::Matrix<float, 12, 12> rw_ = Eigen::Matrix<float, 12, 12>::Zero();
+  // Eigen::Matrix<float, 12, 12> rw_ = Eigen::Matrix<float, 12, 12>::Zero();
   /* Process Noise Covariance (Discrete approximation) */
-  Eigen::Matrix<float, 15, 12> gs_ = Eigen::Matrix<float, 15, 12>::Zero();
+  // Eigen::Matrix<float, 15, 12> gs_ = Eigen::Matrix<float, 15, 12>::Zero();
   /* Innovation covariance */
-  Eigen::Matrix<float, 6, 6> s_gnss_ = Eigen::Matrix<float, 6, 6>::Zero();
-  Eigen::Matrix<float, 3, 3> s_moving_base_ = Eigen::Matrix<float, 3, 3>::Zero();
+  //Eigen::Matrix<float, 6, 6> s_gnss_ = Eigen::Matrix<float, 6, 6>::Zero();
+  // s_moving_base_ = Eigen::Matrix<float, 3, 3>::Zero();
   /* Covariance estimate */
   Eigen::Matrix<float, 15, 15> p_ = Eigen::Matrix<float, 15, 15>::Zero();
   /* Discrete Process Noise */
-  Eigen::Matrix<float, 15, 15> q_ = Eigen::Matrix<float, 15, 15>::Zero();
+  //Eigen::Matrix<float, 15, 15> q_ = Eigen::Matrix<float, 15, 15>::Zero();
   /* Kalman gain */
-  Eigen::Matrix<float, 15, 6> k_gnss_ = Eigen::Matrix<float, 15, 6>::Zero();
-  Eigen::Matrix<float, 15, 3> k_moving_base_ = Eigen::Matrix<float, 15, 3>::Zero();
+  //Eigen::Matrix<float, 15, 6> k_gnss_ = Eigen::Matrix<float, 15, 6>::Zero();
+  //Eigen::Matrix<float, 15, 3> k_moving_base_ = Eigen::Matrix<float, 15, 3>::Zero();
   /* Jacobian (state update matrix) */
-  Eigen::Matrix<float, 15, 15> fs_ = Eigen::Matrix<float, 15, 15>::Zero();
+  //Eigen::Matrix<float, 15, 15> fs_ = Eigen::Matrix<float, 15, 15>::Zero();
   /* State transition */
-  Eigen::Matrix<float, 15, 15> phi_ = Eigen::Matrix<float, 15, 15>::Zero();
+  //Eigen::Matrix<float, 15, 15> phi_ = Eigen::Matrix<float, 15, 15>::Zero();
   /* Error between measures and outputs */
-  Eigen::Matrix<float, 6, 1> y_gnss_ = Eigen::Matrix<float, 6, 1>::Zero();
-  Eigen::Matrix<float, 3, 1> y_moving_base_ = Eigen::Matrix<float, 3, 1>::Zero();
+  //Eigen::Matrix<float, 6, 1> y_gnss_ = Eigen::Matrix<float, 6, 1>::Zero();
+  //Eigen::Matrix<float, 3, 1> y_moving_base_ = Eigen::Matrix<float, 3, 1>::Zero();
   /* State matrix */
   Eigen::Matrix<float, 15, 1> x_ = Eigen::Matrix<float, 15, 1>::Zero();
-  /* Identity matrix for debug */
-  Eigen::Matrix<float, 15, 15> I_ = Eigen::Matrix<float, 15, 15>::Identity();
   /*
   * Constants
   */
   /* Graviational accel in NED */
-  Eigen::Vector3f GRAV_NED_MPS2_ =
+  const Eigen::Vector3f GRAV_NED_MPS2_ =
     (Eigen::Vector3f() << 0.0f, 0.0f, G_MPS2<float>).finished();
   /*
   * Intermediates
