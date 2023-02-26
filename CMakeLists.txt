@@ -29,7 +29,7 @@ target_link_libraries(navigation
 )
 # Setup include directories 
 target_include_directories(navigation INTERFACE src)
-target_compile_options(navigation INTERFACE -O3 -fstack-usage)
+
 # Example and unit testing if this project is built separately
 if (PROJECT_NAME STREQUAL CMAKE_PROJECT_NAME)
   # Add the example target
