@@ -129,9 +129,6 @@ class Ekf15State {
   inline void init_att_err_std_rad(const float val) {
     init_att_err_std_rad_ = val;
   }
-  inline void init_heading_err_std_rad(const float val) {
-    init_heading_err_std_rad_ = val;
-  }
   inline void init_accel_bias_std_mps2(const float val) {
     init_accel_bias_std_mps2_ = val;
   }
@@ -147,9 +144,6 @@ class Ekf15State {
   }
   inline float init_att_err_std_rad() const {
     return init_att_err_std_rad_;
-  }
-  inline float init_heading_err_std_rad() const {
-    return init_heading_err_std_rad_;
   }
   inline float init_accel_bias_std_mps2() const {
     return init_accel_bias_std_mps2_;
@@ -191,9 +185,8 @@ class Ekf15State {
                           Eigen::Matrix<float, 3, 3>::Identity();
     p_.block(3, 3, 3, 3) = init_vel_err_std_mps_ * init_vel_err_std_mps_ *
                           Eigen::Matrix<float, 3, 3>::Identity();
-    p_.block(6, 6, 2, 2) = init_att_err_std_rad_ * init_att_err_std_rad_ *
-                          Eigen::Matrix<float, 2, 2>::Identity();
-    p_(8, 8) = init_heading_err_std_rad_ * init_heading_err_std_rad_;
+    p_.block(6, 6, 3, 3) = init_att_err_std_rad_ * init_att_err_std_rad_ *
+                          Eigen::Matrix<float, 3, 3>::Identity();
     p_.block(9, 9, 3, 3) = init_accel_bias_std_mps2_ *
                           init_accel_bias_std_mps2_ *
                           Eigen::Matrix<float, 3, 3>::Identity();
@@ -445,8 +438,6 @@ class Ekf15State {
   float init_vel_err_std_mps_ = 1.0f;
   /* Standard deviation of the initial attitude error */
   float init_att_err_std_rad_ = 0.34906f;
-  /* Standard deviation of the initial heading error */
-  float init_heading_err_std_rad_ = 3.14159f;
   /* Standard deviation of the initial accel bias */
   float init_accel_bias_std_mps2_ = 0.9810f;
   /* Standard deviation of the initial gyro bias */
