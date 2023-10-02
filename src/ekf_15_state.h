@@ -403,6 +403,7 @@ class Ekf15State {
   */
   /* Standard deviation of accel noise */
   float accel_std_mps2_ = 0.05f;
+  //float accel_std_mps2_ = 1.0f;
   /* Standard deviation of accel Markov bias */
   float accel_markov_bias_std_mps2_ = 0.01f;
   /* Accel correlation time */
@@ -410,7 +411,7 @@ class Ekf15State {
   Eigen::Matrix3f accel_markov_bias_ = -1.0f / accel_tau_s_ *
                                        Eigen::Matrix<float, 3, 3>::Identity();
   /* Standard deviation of gyro noise */
-  float gyro_std_radps_ = 0.00175f;
+  float gyro_std_radps_ = 0.00000175f;
   /* Standard deviation of gyro Markov bias */
   float gyro_markov_bias_std_radps_ = 0.00025f;
   /* Gyro correlation time */
@@ -437,7 +438,7 @@ class Ekf15State {
   /* Standard deviation of the initial velocity error */
   float init_vel_err_std_mps_ = 1.0f;
   /* Standard deviation of the initial attitude error */
-  float init_att_err_std_rad_ = 0.34906f;
+  float init_att_err_std_rad_ = 0.2275f;
   /* Standard deviation of the initial accel bias */
   float init_accel_bias_std_mps2_ = 0.9810f;
   /* Standard deviation of the initial gyro bias */
